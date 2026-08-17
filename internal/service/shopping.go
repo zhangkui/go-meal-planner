@@ -20,7 +20,7 @@ func NewShoppingService(memory *store.Memory, recipes *RecipeService, menus *Men
 }
 
 func (s *ShoppingService) Generate(from, to time.Time) ([]model.ShoppingItem, error) {
-	shortages := make(map[string]model.ShoppingItem)
+	requiredItems := make(map[string]model.ShoppingItem)
 	for _, entry := range s.menus.Between(from, to) {
 		recipe, err := s.recipes.Get(entry.RecipeID)
 		if err != nil {
@@ -28,30 +28,41 @@ func (s *ShoppingService) Generate(from, to time.Time) ([]model.ShoppingItem, er
 		}
 		factor := float64(entry.Servings) / float64(recipe.Servings)
 		for _, ingredient := range recipe.Ingredients {
-			required := ingredient.Quantity * factor
-			if stocked, err := s.inventory.Get(ingredient.Name); err == nil {
-				if stocked.Unit != ingredient.Unit {
-					return nil, ErrUnitMismatch
-				}
-				required -= stocked.Quantity
-			}
-			if required <= 0 {
-				continue
-			}
 			key := store.NormalizeName(ingredient.Name)
-			item := shortages[key]
-			item.Name = ingredient.Name
-			item.Unit = ingredient.Unit
-			item.Quantity += required
-			item.Purchased = s.store.Purchased(ingredient.Name)
-			shortages[key] = item
+			item, exists := requiredItems[key]
+			if exists && item.Unit != ingredient.Unit {
+				return nil, ErrUnitMismatch
+			}
+			if !exists {
+				item.Name = ingredient.Name
+				item.Unit = ingredient.Unit
+			}
+			item.Quantity += ingredient.Quantity * factor
+			requiredItems[key] = item
 		}
 	}
-	result := make([]model.ShoppingItem, 0, len(shortages))
-	for _, item := range shortages {
+
+	keys := make([]string, 0, len(requiredItems))
+	for key := range requiredItems {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	result := make([]model.ShoppingItem, 0, len(requiredItems))
+	for _, key := range keys {
+		item := requiredItems[key]
+		if stocked, err := s.inventory.Get(item.Name); err == nil {
+			if stocked.Unit != item.Unit {
+				return nil, ErrUnitMismatch
+			}
+			item.Quantity -= stocked.Quantity
+		}
+		if item.Quantity <= 0 {
+			continue
+		}
+		item.Purchased = s.store.Purchased(item.Name)
 		result = append(result, item)
 	}
-	sort.Slice(result, func(i, j int) bool { return store.NormalizeName(result[i].Name) < store.NormalizeName(result[j].Name) })
 	return result, nil
 }
 
