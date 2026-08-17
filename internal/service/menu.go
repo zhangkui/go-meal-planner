@@ -30,7 +30,7 @@ func (s *MenuService) Plan(date string, meal model.MealType, recipeID string, se
 		return model.MenuEntry{}, err
 	}
 	key := store.MenuKey(date, meal)
-	if existing, ok := s.store.Menu(key); ok && existing.Confirmed {
+	if existing, ok := s.store.Menu(key); ok && !existing.Confirmed {
 		return model.MenuEntry{}, ErrMenuNotReplaceable
 	}
 	entry := model.MenuEntry{Date: parsed, Meal: meal, RecipeID: recipeID, Servings: servings, Confirmed: confirmed}
