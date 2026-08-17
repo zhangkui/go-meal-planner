@@ -36,7 +36,7 @@ func (s *InventoryService) Consume(name string, quantity float64) (model.Invento
 		return model.InventoryItem{}, ErrInvalidInput
 	}
 	item, ok := s.store.Inventory(name)
-	if !ok || item.Quantity <= quantity {
+	if !ok || item.Quantity < quantity {
 		return model.InventoryItem{}, ErrInsufficientStock
 	}
 	item.Quantity -= quantity
