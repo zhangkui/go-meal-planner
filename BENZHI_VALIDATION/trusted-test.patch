@@ -1,0 +1,26 @@
+diff --git a/internal/service/recipe_clear_steps_verification_test.go b/internal/service/recipe_clear_steps_verification_test.go
+new file mode 100644
+index 0000000..b3d6d24
+--- /dev/null
++++ b/internal/service/recipe_clear_steps_verification_test.go
+@@ -0,0 +1,20 @@
++package service
++
++import "testing"
++
++func TestUpdateRecipeCanClearSteps(t *testing.T) {
++	recipes, _, _, _, _ := testServices()
++	created, err := recipes.Create(sampleRecipe("Soup"))
++	if err != nil {
++		t.Fatal(err)
++	}
++	replacement := sampleRecipe("Soup without instructions")
++	replacement.Steps = []string{}
++	updated, err := recipes.Update(created.ID, replacement)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if len(updated.Steps) != 0 {
++		t.Fatalf("steps were not cleared: %v", updated.Steps)
++	}
++}
