@@ -1,0 +1,1 @@
+Docker execution not run for this case. On August 17, 2026, the user explicitly reduced container validation to one representative sample: BUG-001 test_model_fix1 on linux/amd64. This file records the scope honestly; no architecture or container result is claimed for BUG-004.
