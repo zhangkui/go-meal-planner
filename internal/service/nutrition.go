@@ -23,7 +23,7 @@ func (s *NutritionService) ForDate(date time.Time) (model.NutritionSummary, erro
 func (s *NutritionService) ForWeek(date time.Time) (model.NutritionSummary, error) {
 	weekday := (int(date.Weekday()) + 6) % 7
 	start := date.AddDate(0, 0, -weekday)
-	end := start.AddDate(0, 0, 7)
+	end := start.AddDate(0, 0, 6)
 	return s.summarize(s.menus.Between(start, end))
 }
 
