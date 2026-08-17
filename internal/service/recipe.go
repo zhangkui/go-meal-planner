@@ -45,17 +45,13 @@ func (s *RecipeService) List() []model.Recipe {
 }
 
 func (s *RecipeService) Update(id string, replacement model.Recipe) (model.Recipe, error) {
-	current, ok := s.store.Recipe(id)
-	if !ok {
+	if _, ok := s.store.Recipe(id); !ok {
 		return model.Recipe{}, ErrNotFound
 	}
 	if err := validateRecipe(replacement); err != nil {
 		return model.Recipe{}, err
 	}
 	replacement.ID = id
-	if len(replacement.Steps) == 0 {
-		replacement.Steps = current.Steps
-	}
 	replacement = cloneRecipe(replacement)
 	s.store.PutRecipe(replacement)
 	return cloneRecipe(replacement), nil
