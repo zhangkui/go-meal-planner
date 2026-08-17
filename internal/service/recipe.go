@@ -45,7 +45,7 @@ func (s *RecipeService) List() []model.Recipe {
 }
 
 func (s *RecipeService) Update(id string, replacement model.Recipe) (model.Recipe, error) {
-	current, ok := s.store.Recipe(id)
+	_, ok := s.store.Recipe(id)
 	if !ok {
 		return model.Recipe{}, ErrNotFound
 	}
@@ -53,9 +53,6 @@ func (s *RecipeService) Update(id string, replacement model.Recipe) (model.Recip
 		return model.Recipe{}, err
 	}
 	replacement.ID = id
-	if len(replacement.Steps) == 0 {
-		replacement.Steps = current.Steps
-	}
 	replacement = cloneRecipe(replacement)
 	s.store.PutRecipe(replacement)
 	return cloneRecipe(replacement), nil
@@ -82,6 +79,8 @@ func validateRecipe(recipe model.Recipe) error {
 
 func cloneRecipe(recipe model.Recipe) model.Recipe {
 	recipe.Ingredients = append([]model.Ingredient(nil), recipe.Ingredients...)
-	recipe.Steps = append([]string(nil), recipe.Steps...)
+	if recipe.Steps != nil {
+		recipe.Steps = append([]string{}, recipe.Steps...)
+	}
 	return recipe
 }
