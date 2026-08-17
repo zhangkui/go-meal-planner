@@ -1,0 +1,83 @@
+Representative Docker validation (user-approved sample only)
+project=go-meal-planner
+case=BUG-001
+platform=linux/amd64
+image=go-meal-planner-bug1-candidate
+
+=== docker build amd64 ===
+#0 building with "desktop-linux" instance using docker driver
+System.Management.Automation.RemoteException
+#1 [internal] load build definition from benzhi.Dockerfile
+#1 transferring dockerfile: 241B 0.0s done
+#1 DONE 0.0s
+System.Management.Automation.RemoteException
+#2 [internal] load metadata for docker.io/library/golang:1.22
+#2 DONE 0.4s
+System.Management.Automation.RemoteException
+#3 [internal] load .dockerignore
+#3 transferring context: 65B 0.0s done
+#3 DONE 0.0s
+System.Management.Automation.RemoteException
+#4 [internal] load build context
+#4 DONE 0.0s
+System.Management.Automation.RemoteException
+#5 [1/4] FROM docker.io/library/golang:1.22@sha256:1cf6c45ba39db9fd6db16922041d074a63c935556a05c5ccb62d181034df7f02
+#5 resolve docker.io/library/golang:1.22@sha256:1cf6c45ba39db9fd6db16922041d074a63c935556a05c5ccb62d181034df7f02 0.1s done
+#5 DONE 0.1s
+System.Management.Automation.RemoteException
+#4 [internal] load build context
+#4 transferring context: 1.38kB 0.0s done
+#4 DONE 0.1s
+System.Management.Automation.RemoteException
+#6 [3/4] COPY . .
+#6 CACHED
+System.Management.Automation.RemoteException
+#7 [2/4] WORKDIR /app
+#7 CACHED
+System.Management.Automation.RemoteException
+#8 [4/4] RUN go build ./...
+#8 CACHED
+System.Management.Automation.RemoteException
+#9 exporting to image
+#9 exporting layers done
+#9 exporting manifest sha256:daf6126ff4e2078b59e5e4cdb7216f4cb999eaf0d77ffb743e6c29140c7eb6c3 done
+#9 exporting config sha256:9b728275b35b1e9f4e84218d1be62f825c415d2721d86cd2aefa21fc0a0de6ec done
+#9 exporting attestation manifest sha256:73966a4b0265b28c42e7af435a0ea671c3a60affd8c4124bd27ed5c456658252
+#9 exporting attestation manifest sha256:73966a4b0265b28c42e7af435a0ea671c3a60affd8c4124bd27ed5c456658252 0.1s done
+#9 exporting manifest list sha256:6449daa73e2133312a1834e10613f2b21011eaa95b606dc3d85264149f8609b5
+#9 exporting manifest list sha256:6449daa73e2133312a1834e10613f2b21011eaa95b606dc3d85264149f8609b5 0.2s done
+#9 naming to docker.io/library/go-meal-planner-bug1-candidate:latest
+#9 naming to docker.io/library/go-meal-planner-bug1-candidate:latest done
+#9 unpacking to docker.io/library/go-meal-planner-bug1-candidate:latest 0.0s done
+#9 DONE 0.4s
+System.Management.Automation.RemoteException
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/nfyhbqrxkkjp0whmtbyyswz7h
+exit_code=0
+
+=== container go version and build ===
+go version go1.22.12 linux/amd64
+exit_code=0
+
+=== public verification test ===
+ok  	github.com/zhangkui/go-meal-planner/internal/service	0.003s
+exit_code=0
+
+=== mounted private test ===
+ok  	github.com/zhangkui/go-meal-planner/internal/service	0.005s
+exit_code=0
+
+=== full public tests ===
+?   	github.com/zhangkui/go-meal-planner/cmd	[no test files]
+?   	github.com/zhangkui/go-meal-planner/internal/model	[no test files]
+?   	github.com/zhangkui/go-meal-planner/internal/store	[no test files]
+ok  	github.com/zhangkui/go-meal-planner/internal/httpapi	0.019s
+ok  	github.com/zhangkui/go-meal-planner/internal/service	0.003s
+exit_code=0
+
+=== offline build ===
+
+exit_code=0
+
+=== answer material isolation ===
+
+exit_code=0
