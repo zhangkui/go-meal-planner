@@ -20,7 +20,16 @@ func NewShoppingService(memory *store.Memory, recipes *RecipeService, menus *Men
 }
 
 func (s *ShoppingService) Generate(from, to time.Time) ([]model.ShoppingItem, error) {
-	shortages := make(map[string]model.ShoppingItem)
+	// Aggregate each ingredient's total demand across every planned meal
+	// before subtracting inventory. Inventory may only cover the aggregated
+	// total once per ingredient, so collecting demand first avoids subtracting
+	// the same stock multiple times for ingredients used in several meals.
+	type demand struct {
+		name     string
+		unit     string
+		quantity float64
+	}
+	demands := make(map[string]demand)
 	for _, entry := range s.menus.Between(from, to) {
 		recipe, err := s.recipes.Get(entry.RecipeID)
 		if err != nil {
@@ -29,27 +38,36 @@ func (s *ShoppingService) Generate(from, to time.Time) ([]model.ShoppingItem, er
 		factor := float64(entry.Servings) / float64(recipe.Servings)
 		for _, ingredient := range recipe.Ingredients {
 			required := ingredient.Quantity * factor
-			if stocked, err := s.inventory.Get(ingredient.Name); err == nil {
-				if stocked.Unit != ingredient.Unit {
-					return nil, ErrUnitMismatch
-				}
-				required -= stocked.Quantity
-			}
-			if required <= 0 {
-				continue
-			}
 			key := store.NormalizeName(ingredient.Name)
-			item := shortages[key]
-			item.Name = ingredient.Name
-			item.Unit = ingredient.Unit
-			item.Quantity += required
-			item.Purchased = s.store.Purchased(ingredient.Name)
-			shortages[key] = item
+			d, ok := demands[key]
+			if ok && d.unit != ingredient.Unit {
+				return nil, ErrUnitMismatch
+			}
+			d.name = ingredient.Name
+			d.unit = ingredient.Unit
+			d.quantity += required
+			demands[key] = d
 		}
 	}
-	result := make([]model.ShoppingItem, 0, len(shortages))
-	for _, item := range shortages {
-		result = append(result, item)
+
+	result := make([]model.ShoppingItem, 0, len(demands))
+	for _, d := range demands {
+		required := d.quantity
+		if stocked, err := s.inventory.Get(d.name); err == nil {
+			if stocked.Unit != d.unit {
+				return nil, ErrUnitMismatch
+			}
+			required -= stocked.Quantity
+		}
+		if required <= 0 {
+			continue
+		}
+		result = append(result, model.ShoppingItem{
+			Name:      d.name,
+			Unit:      d.unit,
+			Quantity:  required,
+			Purchased: s.store.Purchased(d.name),
+		})
 	}
 	sort.Slice(result, func(i, j int) bool { return store.NormalizeName(result[i].Name) < store.NormalizeName(result[j].Name) })
 	return result, nil
